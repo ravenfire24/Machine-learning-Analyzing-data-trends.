@@ -1,39 +1,85 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 
-# Sample sales data 
-data = {
-    "Month": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    "Marketing Spend": [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500],
-    "Holiday Season": [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],    
-    "Sales": [2000, 2900, 2450, 2650, 3900, 3450, 3550, 4400, 3950, 4100, 4950, 4600]
-}
 
-# Converting data to DataFrame
-df = pd.DataFrame(data)
+df = pd.read_csv("sales_data.csv")
 
-# Features (independent variables) and target (dependent variable)
+print("\nSales Dataset Preview\n")
+print(df.head())
+
+sns.set(style="whitegrid")
+
+# Sales Trend
+plt.figure(figsize=(10,6))
+sns.lineplot(x="Month", y="Sales", data=df, marker="o")
+plt.title("Monthly Sales Trend")
+plt.xlabel("Month")
+plt.ylabel("Sales ($)")
+plt.show()
+
+# Marketing Spend vs Sales
+plt.figure(figsize=(10,6))
+sns.scatterplot(x="Marketing Spend", y="Sales", data=df)
+plt.title("Marketing Spend vs Sales")
+plt.xlabel("Marketing Spend")
+plt.ylabel("Sales")
+plt.show()
+
+# Holiday Effect
+plt.figure(figsize=(8,6))
+sns.boxplot(x="Holiday Season", y="Sales", data=df)
+plt.title("Holiday Season Impact on Sales")
+plt.show()
+
 X = df[["Month", "Marketing Spend", "Holiday Season"]]
 y = df["Sales"]
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
-# Creating and training the Linear Regression model
 model = LinearRegression()
 model.fit(X_train, y_train)
 
-# Predicting on test data
 y_pred = model.predict(X_test)
 
-# Calculating accuracy (R^2 score)
 accuracy = r2_score(y_test, y_pred) * 100
-print(f"Model achieved an accuracy of {accuracy:.2f}% on test data.")
+print(f"Model Accuracy (R² Score): {accuracy:.2f}%")
+plt.figure(figsize=(8,6))
+plt.scatter(y_test, y_pred)
+plt.xlabel("Actual Sales")
+plt.ylabel("Predicted Sales")
+plt.title("Actual vs Predicted Sales")
 
-# sample prediction
-sample_input = pd.DataFrame({"Month": [13], "Marketing Spend": [7000], "Holiday Season": [0]})
+plt.plot(
+    [y_test.min(), y_test.max()],
+    [y_test.min(), y_test.max()]
+)
+
+plt.show()
+
+coefficients = pd.DataFrame({
+    "Feature": X.columns,
+    "Importance": model.coef_
+})
+
+plt.figure(figsize=(8,5))
+sns.barplot(x="Importance", y="Feature", data=coefficients)
+plt.title("Feature Impact on Sales")
+plt.show()
+
+sample_input = pd.DataFrame({
+    "Month": [25],
+    "Marketing Spend": [10500],
+    "Holiday Season": [1]
+})
+
 predicted_sales = model.predict(sample_input)
-print(f"Predicted Sales for Month 13: ${predicted_sales[0]:.2f}")
+
+print(f"Predicted Sales for Month 25: ${predicted_sales[0]:.2f}")
